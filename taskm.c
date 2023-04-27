@@ -35,6 +35,15 @@ int main(int argc, char* argv[]) {
     temp_str[strlen(temp_str) - 1] = '\0';
     strcpy(input, temp_str);
     int length = strlen(input);
+    /*Checking for --list option*/
+    int list_flag = 1;
+    char list[200];
+    strcpy(list, "");
+    strcat(list,"--list");
+    for (int k = 0; input[k] != '\0'; k++) {
+      if (input[k] != list[k])
+        list_flag = 0;
+    }
     /*Counting child processes with "ps" system call.*/
     /*First, using the console command writing the results into a file*/
     int res = 0;
@@ -89,6 +98,16 @@ int main(int argc, char* argv[]) {
         and if it is defunct.*/
       int parent = atoi(PPID);
       if (parent == cur_pid) {
+	if (list_flag) {
+	  char print[200];
+	  strcpy(print, "");
+	  int p = 0;
+	  for (; lines[i][p] != '\0'; p++)
+		  print[p] = lines[i][p];
+	  p++;
+	  print[p] = '\0';
+	  printf("%s\n", print);
+	}
         char last_word[200];
         strcpy(last_word, "");
         int k = strlen(lines[i]) - 1;
@@ -137,18 +156,40 @@ int main(int argc, char* argv[]) {
       printf("Already executing %d commands, request denied.\n", kid_count);
       continue;
     }
-    /*Executing the required program if conditions met.*/
-    res = 0;
-    res = fork();
-    if (res == 0) {
-      if (execl("/bin/bash", "/bin/bash", "-c", input, (char*)NULL) < 0) {
-        printf("Failed to execute console command.\n");
-        exit(-1);
-      }
+    int kill_flag = 1;
+    char kill[200];
+    strcpy(kill, "");
+    strcat(kill,"--kill");
+    for (int k = 0; input[k] != ' '; k++) {
+      if (input[k] != kill[k])
+        kill_flag = 0;
     }
+    int p = 0;
+    if (kill_flag) {
+	char com[200];
+	strcpy(com, input);
+	strcpy(input, "");
+	for (int k = 2; com[k] != '\0'; k++){
+	    input[p] = com[k];
+	    p++;
+	}
+      input[p] = '\0';
+    
+    }
+    /*Executing the required program if conditions met.*/
+    if (!list_flag) {
+      res = 0;
+      res = fork();
+      if (res == 0) {
+        if (execl("/bin/bash", "/bin/bash", "-c", input, (char*)NULL) < 0) {
+          printf("Failed to execute console command.\n");
+          exit(-1);
+        }
+      }
     /*If EndOfFile is found, finishes program*/
-    if (input[length] == EOF)
+      if (input[length] == EOF)
       break;
+    }
   }
   printf("Finished program.\n");
   return 0;

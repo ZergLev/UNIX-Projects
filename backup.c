@@ -1,5 +1,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include <unistd.h> 
 #include <fcntl.h>
 #include <stdio.h>
@@ -47,8 +48,8 @@ void copy_file(char* pathname) {
   char cur_path[200] = "";
   while (slash_count > 0) {
     if (path[k] == '/') {
-      slash_count--;
-      int res = 0;
+      	slash_count--;
+      	int res = 0;
       res = fork();
       if (res == 0) {
         printf("Tryin' to create a directory called %s\n", cur_path);
@@ -62,7 +63,7 @@ void copy_file(char* pathname) {
       // Waiting a bit before trying to create the next directory
       // to avoid "race condition" since my program
       // calls lots of different processes
-      sleep(1);
+      waitpid(res, NULL, WNOHANG);
     }
     char temp[2] = "";
     temp[1] = '\0';
@@ -82,7 +83,7 @@ void copy_file(char* pathname) {
       exit(-1);
     }
   // Waiting to eliminate race condition. Yes, again.
-  sleep(1);
+  waitpid(res, NULL, WNOHANG);
   // Calling gzip() to zip the copied file.
   printf("Trying to call gzip with path = %s\n", path);
   gzip(path);
@@ -155,7 +156,7 @@ void rec_search(char* pathname){
   }
   if (res == 0)
     printf("Seg fault not at /bin/bash.\n");
-  sleep(1);
+  waitpid(res, NULL, WNOHANG);
   //Using "ls -l > ls.txt" to get directory contents.
   //Then reading the file for said contents.
   int fd3 = 0;
